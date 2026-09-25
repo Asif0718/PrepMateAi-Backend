@@ -1,0 +1,168 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" font-family="'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#0a0a0a"/>
+    </marker>
+    <style>
+      .tier { fill: #ffffff; stroke: #0a0a0a; stroke-width: 1.5; }
+      .box { fill: #f5f5f5; stroke: #d4d4d4; stroke-width: 1; }
+      .dark { fill: #0a0a0a; }
+      .h1 { font-size: 34px; font-weight: 700; fill: #0a0a0a; }
+      .h2 { font-size: 20px; font-weight: 700; fill: #0a0a0a; }
+      .h3 { font-size: 15px; font-weight: 600; fill: #0a0a0a; }
+      .sub { font-size: 14px; fill: #525252; }
+      .body { font-size: 13px; fill: #525252; }
+      .inv { font-size: 15px; font-weight: 600; fill: #ffffff; }
+      .label { font-size: 13px; font-weight: 600; fill: #0a0a0a; }
+      .link { stroke: #0a0a0a; stroke-width: 1.6; fill: none; marker-end: url(#arrow); }
+      .dashed { stroke-dasharray: 6 5; }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1000" fill="#fafafa"/>
+
+  <text x="60" y="72" class="h1">PrepMate AI architecture</text>
+  <text x="60" y="102" class="sub">Resume in, placement-ready out: prep guides, job matching, mock interviews and a tracked job search</text>
+
+  <!-- Student -->
+  <rect x="60" y="150" width="320" height="90" rx="20" class="tier"/>
+  <text x="84" y="188" class="h2">Student</text>
+  <text x="84" y="214" class="sub">Browser on laptop or phone</text>
+
+  <!-- Frontend -->
+  <rect x="60" y="290" width="320" height="440" rx="20" class="tier"/>
+  <text x="84" y="328" class="h2">Frontend</text>
+  <text x="84" y="352" class="sub">React 19, Vite 8, Tailwind v4</text>
+  <text x="84" y="372" class="sub">Hosted on Vercel</text>
+  <g class="body">
+    <rect x="84" y="392" width="272" height="36" rx="12" class="box"/><text x="100" y="415">Landing, login and register</text>
+    <rect x="84" y="436" width="272" height="36" rx="12" class="box"/><text x="100" y="459">Dashboard: resume + job description</text>
+    <rect x="84" y="480" width="272" height="36" rx="12" class="box"/><text x="100" y="503">Preparation guide + 7-day plan</text>
+    <rect x="84" y="524" width="272" height="36" rx="12" class="box"/><text x="100" y="547">Jobs, match scores and alerts</text>
+    <rect x="84" y="568" width="272" height="36" rx="12" class="box"/><text x="100" y="591">Mock interview (text or voice)</text>
+    <rect x="84" y="612" width="272" height="36" rx="12" class="box"/><text x="100" y="635">Application tracker board</text>
+    <rect x="84" y="656" width="272" height="36" rx="12" class="box"/><text x="100" y="679">Prep history</text>
+  </g>
+
+  <!-- Backend -->
+  <rect x="460" y="150" width="540" height="580" rx="20" class="tier"/>
+  <text x="484" y="188" class="h2">Backend API</text>
+  <text x="484" y="212" class="sub">FastAPI + Motor (async MongoDB), hosted on Render</text>
+
+  <g>
+    <rect x="484" y="232" width="240" height="56" rx="12" class="dark"/>
+    <text x="500" y="256" class="inv">/api/auth</text>
+    <text x="500" y="277" font-size="13" fill="#d4d4d4">register, login, me</text>
+    <rect x="736" y="232" width="240" height="56" rx="12" class="dark"/>
+    <text x="752" y="256" class="inv">/api/resume</text>
+    <text x="752" y="277" font-size="13" fill="#d4d4d4">upload, history, tailor, kit</text>
+    <rect x="484" y="298" width="240" height="56" rx="12" class="dark"/>
+    <text x="500" y="322" class="inv">/api/jobs</text>
+    <text x="500" y="343" font-size="13" fill="#d4d4d4">search, tracker, alerts</text>
+    <rect x="736" y="298" width="240" height="56" rx="12" class="dark"/>
+    <text x="752" y="322" class="inv">/api/interview</text>
+    <text x="752" y="343" font-size="13" fill="#d4d4d4">start, answer, history</text>
+  </g>
+
+  <g>
+    <rect x="484" y="378" width="156" height="96" rx="12" class="box"/>
+    <text x="498" y="404" class="h3">PDF reader</text>
+    <text x="498" y="428" class="body">Extracts resume</text>
+    <text x="498" y="446" class="body">text with pypdf</text>
+
+    <rect x="652" y="378" width="156" height="96" rx="12" class="box"/>
+    <text x="666" y="404" class="h3">Matching</text>
+    <text x="666" y="428" class="body">Skill extraction</text>
+    <text x="666" y="446" class="body">and match score</text>
+
+    <rect x="820" y="378" width="156" height="96" rx="12" class="box"/>
+    <text x="834" y="404" class="h3">LLM service</text>
+    <text x="834" y="428" class="body">Prompts, JSON parse,</text>
+    <text x="834" y="446" class="body">provider fallback</text>
+
+    <rect x="484" y="486" width="156" height="96" rx="12" class="box"/>
+    <text x="498" y="512" class="h3">Auth + quota</text>
+    <text x="498" y="536" class="body">JWT, bcrypt,</text>
+    <text x="498" y="554" class="body">daily AI limit</text>
+
+    <rect x="652" y="486" width="156" height="96" rx="12" class="box"/>
+    <text x="666" y="512" class="h3">Cache</text>
+    <text x="666" y="536" class="body">TTL cache for AI</text>
+    <text x="666" y="554" class="body">results and jobs</text>
+
+    <rect x="820" y="486" width="156" height="96" rx="12" class="box"/>
+    <text x="834" y="512" class="h3">Mailer</text>
+    <text x="834" y="536" class="body">Brevo email for</text>
+    <text x="834" y="554" class="body">alerts and reminders</text>
+  </g>
+
+  <rect x="484" y="606" width="492" height="100" rx="12" class="box"/>
+  <text x="500" y="634" class="h3">Middleware</text>
+  <text x="500" y="658" class="body">CORS for the Vercel and local origins, GZip responses,</text>
+  <text x="500" y="678" class="body">friendly 503 when every AI provider is busy</text>
+
+  <!-- External services -->
+  <rect x="1080" y="150" width="460" height="150" rx="20" class="tier"/>
+  <text x="1104" y="188" class="h2">Free LLM providers</text>
+  <text x="1104" y="212" class="sub">Tried in order until one answers</text>
+  <rect x="1104" y="234" width="120" height="40" rx="20" class="dark"/><text x="1164" y="259" class="inv" text-anchor="middle">Groq</text>
+  <rect x="1236" y="234" width="140" height="40" rx="20" class="dark"/><text x="1306" y="259" class="inv" text-anchor="middle">OpenRouter</text>
+  <rect x="1388" y="234" width="128" height="40" rx="20" class="dark"/><text x="1452" y="259" class="inv" text-anchor="middle">Gemini</text>
+
+  <rect x="1080" y="330" width="460" height="100" rx="20" class="tier"/>
+  <text x="1104" y="368" class="h2">JSearch (RapidAPI)</text>
+  <text x="1104" y="394" class="sub">Live job listings for search and daily alerts</text>
+
+  <rect x="1080" y="460" width="460" height="170" rx="20" class="tier"/>
+  <text x="1104" y="498" class="h2">MongoDB Atlas</text>
+  <g class="body">
+    <rect x="1104" y="516" width="130" height="34" rx="17" class="box"/><text x="1169" y="538" text-anchor="middle">users</text>
+    <rect x="1244" y="516" width="130" height="34" rx="17" class="box"/><text x="1309" y="538" text-anchor="middle">resumes</text>
+    <rect x="1384" y="516" width="132" height="34" rx="17" class="box"/><text x="1450" y="538" text-anchor="middle">interviews</text>
+    <rect x="1104" y="560" width="130" height="34" rx="17" class="box"/><text x="1169" y="582" text-anchor="middle">applied_jobs</text>
+    <rect x="1244" y="560" width="130" height="34" rx="17" class="box"/><text x="1309" y="582" text-anchor="middle">job_alerts</text>
+    <rect x="1384" y="560" width="132" height="34" rx="17" class="box"/><text x="1450" y="582" text-anchor="middle">cache, ai_usage</text>
+  </g>
+
+  <rect x="1080" y="660" width="460" height="70" rx="20" class="tier"/>
+  <text x="1104" y="702" class="h2">Brevo</text>
+  <text x="1180" y="702" class="sub">Transactional email</text>
+
+  <!-- Scheduled jobs -->
+  <rect x="60" y="800" width="1480" height="150" rx="20" class="tier"/>
+  <text x="84" y="838" class="h2">GitHub Actions</text>
+  <text x="84" y="862" class="sub">Runs every day at 09:00 IST</text>
+  <rect x="380" y="822" width="330" height="106" rx="12" class="box"/>
+  <text x="398" y="850" class="h3">1. job_alerts.py</text>
+  <text x="398" y="874" class="body">Searches each saved alert, scores new</text>
+  <text x="398" y="892" class="body">jobs and shortlists the good matches</text>
+  <rect x="770" y="822" width="330" height="106" rx="12" class="box"/>
+  <text x="788" y="850" class="h3">2. reminders.py</text>
+  <text x="788" y="874" class="body">Interview-tomorrow alerts and</text>
+  <text x="788" y="892" class="body">7-day follow-up nudges</text>
+  <rect x="1160" y="822" width="356" height="106" rx="12" class="box"/>
+  <text x="1178" y="850" class="h3">3. Email digest</text>
+  <text x="1178" y="874" class="body">One email per student via Brevo,</text>
+  <text x="1178" y="892" class="body">linking back to the tracker</text>
+  <path d="M710 875 H762" class="link"/>
+  <path d="M1100 875 H1152" class="link"/>
+
+  <!-- Connections -->
+  <path d="M220 240 V282" class="link"/>
+  <path d="M220 282 V240" class="link"/>
+  <path d="M380 510 H452" class="link"/>
+  <text x="386" y="498" class="label">HTTPS</text>
+  <text x="386" y="532" class="label">+ JWT</text>
+
+  <path d="M1000 254 H1072" class="link"/>
+  <text x="1010" y="244" class="label">prompts</text>
+  <path d="M1000 380 H1072" class="link"/>
+  <text x="1010" y="370" class="label">jobs</text>
+  <path d="M1000 545 H1072" class="link"/>
+  <text x="1010" y="535" class="label">data</text>
+  <path d="M1000 695 H1072" class="link"/>
+  <text x="1010" y="685" class="label">email</text>
+
+  <path d="M1310 800 V738" class="link dashed"/>
+  <text x="1320" y="776" class="label">reads Mongo, calls JSearch and Brevo</text>
+</svg>
