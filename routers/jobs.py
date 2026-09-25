@@ -1,16 +1,18 @@
+import re
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from database import applied_jobs_collection, cache_get, cache_set, users_collection
+from database import applied_jobs_collection, cache_get, cache_set, job_alerts_collection, users_collection
 from deps import get_current_user, get_optional_user, to_object_id
 from jobs import fetch_jobs
 from matching import match_score
-from models import AppliedJobIn, AppliedJobUpdate
+from models import AppliedJobIn, AppliedJobUpdate, JobAlertIn
 
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
 
 JOB_CACHE_SECONDS = 6 * 3600
+MAX_ALERTS = 3
 
 
 def serialize_applied_job(job: dict) -> dict:
@@ -25,6 +27,10 @@ def serialize_applied_job(job: dict) -> dict:
         "notes": job.get("notes", ""),
         "interview_date": job.get("interview_date"),
         "applied_at": applied_at.isoformat() if applied_at else None,
+        "match_score": job.get("match_score"),
+        "source": job.get("source"),
+        "description": job.get("description", ""),
+        "kit": job.get("kit"),
     }
 
 
@@ -80,6 +86,8 @@ async def save_applied_job(job: AppliedJobIn, user: dict = Depends(get_current_u
     job_data = {
         **identity,
         "apply_link": job.apply_link,
+        "description": (job.description or "")[:3000],
+        "match_score": job.match_score,
         "status": "applied",
         "notes": "",
         "interview_date": None,
@@ -106,7 +114,14 @@ async def update_applied_job(job_id: str, body: AppliedJobUpdate, user: dict = D
     if not changes:
         raise HTTPException(status_code=400, detail="Nothing to update")
 
-    changes["updated_at"] = datetime.utcnow()
+    now = datetime.utcnow()
+    changes["updated_at"] = now
+    if changes.get("status") == "applied":
+        # A shortlisted job becomes a real application the moment it moves to Applied.
+        await applied_jobs_collection.update_one(
+            {"_id": to_object_id(job_id), "user_id": user["user_id"], "status": "shortlisted"},
+            {"$set": {"applied_at": now}},
+        )
 
     job = await applied_jobs_collection.find_one_and_update(
         {"_id": to_object_id(job_id), "user_id": user["user_id"]},
@@ -130,3 +145,58 @@ async def delete_applied_job(job_id: str, user: dict = Depends(get_current_user)
         raise HTTPException(status_code=404, detail="Job not found")
 
     return {"message": "Job removed"}
+
+
+def serialize_alert(alert: dict) -> dict:
+    last_run = alert.get("last_run_at")
+    return {
+        "id": str(alert["_id"]),
+        "query": alert["query"],
+        "location": alert["location"],
+        "min_score": alert.get("min_score", 60),
+        "last_run_at": last_run.isoformat() if last_run else None,
+    }
+
+
+@router.get("/alerts")
+async def list_alerts(user: dict = Depends(get_current_user)):
+    cursor = job_alerts_collection.find({"user_id": user["user_id"]}, {"seen_ids": 0}).sort("created_at", 1)
+    return {"alerts": [serialize_alert(a) async for a in cursor]}
+
+
+@router.post("/alerts")
+async def create_alert(body: JobAlertIn, user: dict = Depends(get_current_user)):
+    query, location = body.query.strip(), body.location.strip()
+    existing = await job_alerts_collection.find_one({
+        "user_id": user["user_id"],
+        "query": {"$regex": f"^{re.escape(query)}$", "$options": "i"},
+        "location": {"$regex": f"^{re.escape(location)}$", "$options": "i"},
+    })
+    if existing:
+        return {"alert": serialize_alert(existing)}
+
+    if await job_alerts_collection.count_documents({"user_id": user["user_id"]}) >= MAX_ALERTS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"You can have up to {MAX_ALERTS} job alerts. Delete one to add another.",
+        )
+
+    alert = {
+        "user_id": user["user_id"],
+        "query": query,
+        "location": location,
+        "min_score": body.min_score,
+        "seen_ids": [],
+        "created_at": datetime.utcnow(),
+    }
+    result = await job_alerts_collection.insert_one(alert)
+    alert["_id"] = result.inserted_id
+    return {"alert": serialize_alert(alert)}
+
+
+@router.delete("/alerts/{alert_id}")
+async def delete_alert(alert_id: str, user: dict = Depends(get_current_user)):
+    result = await job_alerts_collection.delete_one({"_id": to_object_id(alert_id), "user_id": user["user_id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Alert not found")
+    return {"message": "Alert deleted"}

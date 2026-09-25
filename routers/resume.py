@@ -4,11 +4,11 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from starlette.concurrency import run_in_threadpool
 
-from database import cache_get, cache_set, resumes_collection, users_collection
+from database import applied_jobs_collection, cache_get, cache_set, resumes_collection, users_collection
 from deps import ai_quota, content_hash, get_current_user, to_object_id
-from llm_service import generate_preparation_guide, tailor_resume
+from llm_service import generate_application_kit, generate_preparation_guide, tailor_resume
 from matching import extract_skills
-from models import TailorRequest
+from models import ApplicationKitRequest, TailorRequest
 from pdf_reader import extract_text_from_pdf
 
 router = APIRouter(prefix="/api/resume", tags=["resume"])
@@ -132,3 +132,39 @@ async def tailor_resume_for_job(body: TailorRequest, user: dict = Depends(get_cu
         await cache_set(cache_key, result, WEEK)
 
     return result
+
+
+@router.post("/application-kit")
+async def application_kit(body: ApplicationKitRequest, user: dict = Depends(get_current_user)):
+    db_user = await users_collection.find_one(
+        {"_id": to_object_id(user["user_id"])}, {"resume_text": 1}
+    )
+    resume_text = (db_user or {}).get("resume_text")
+    if not resume_text:
+        raise HTTPException(status_code=400, detail="Upload your resume on the dashboard first")
+
+    title, company, description = body.title, body.company, body.job_description
+    job_filter = None
+    if body.job_id:
+        job_filter = {"_id": to_object_id(body.job_id), "user_id": user["user_id"]}
+        job = await applied_jobs_collection.find_one(job_filter)
+        if not job:
+            raise HTTPException(status_code=404, detail="Job not found")
+        title = title or job.get("title") or ""
+        company = company or job.get("company") or ""
+        description = description or job.get("description") or ""
+
+    if not (title or description).strip():
+        raise HTTPException(status_code=400, detail="Add a job title or description first")
+
+    cache_key = "kit:" + content_hash(resume_text, title, company, description)
+    kit = await cache_get(cache_key)
+    if kit is None:
+        async with ai_quota(user["user_id"]):
+            kit = await generate_application_kit(resume_text, description, title, company)
+        await cache_set(cache_key, kit, WEEK)
+
+    if job_filter:
+        await applied_jobs_collection.update_one(job_filter, {"$set": {"kit": kit}})
+
+    return kit

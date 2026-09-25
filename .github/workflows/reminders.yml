@@ -1,4 +1,4 @@
-name: Daily application reminders
+name: Daily job alerts and application reminders
 
 on:
   schedule:
@@ -8,15 +8,17 @@ on:
 jobs:
   remind:
     runs-on: ubuntu-latest
+    env:
+      MONGO_URL: ${{ secrets.MONGO_URL }}
+      RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
+      BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+      BREVO_SENDER_EMAIL: ${{ secrets.BREVO_SENDER_EMAIL }}
+      FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: pip install motor python-dotenv httpx
+      - run: python job_alerts.py
       - run: python reminders.py
-        env:
-          MONGO_URL: ${{ secrets.MONGO_URL }}
-          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
-          BREVO_SENDER_EMAIL: ${{ secrets.BREVO_SENDER_EMAIL }}
-          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}

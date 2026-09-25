@@ -10,8 +10,9 @@ from datetime import datetime, timedelta
 import httpx
 from bson import ObjectId
 
-from config import BREVO_API_KEY, BREVO_SENDER_EMAIL, FRONTEND_URL
+from config import FRONTEND_URL
 from database import applied_jobs_collection, users_collection
+from mailer import email_enabled, send_email
 
 FOLLOW_UP_AFTER_DAYS = 7
 
@@ -21,7 +22,7 @@ def job_label(job: dict) -> str:
 
 
 async def main():
-    if not BREVO_API_KEY or not BREVO_SENDER_EMAIL:
+    if not email_enabled():
         print("BREVO_API_KEY / BREVO_SENDER_EMAIL not set, skipping reminders")
         return
 
@@ -50,20 +51,14 @@ async def main():
                 continue
 
             items = "".join(f"<li>{line}</li>" for line in lines)
-            response = await client.post(
-                "https://api.brevo.com/v3/smtp/email",
-                headers={"api-key": BREVO_API_KEY},
-                json={
-                    "sender": {"email": BREVO_SENDER_EMAIL, "name": "PrepMate AI"},
-                    "to": [{"email": user["email"], "name": user.get("name", "")}],
-                    "subject": "Your job application reminders",
-                    "htmlContent": (
-                        f"<p>Hi {html.escape(user.get('name', ''))},</p><ul>{items}</ul>"
-                        f'<p><a href="{FRONTEND_URL}/applied-jobs">Open your tracker</a></p>'
-                    ),
-                },
+            status = await send_email(
+                client,
+                user,
+                "Your job application reminders",
+                f"<p>Hi {html.escape(user.get('name', ''))},</p><ul>{items}</ul>"
+                f'<p><a href="{FRONTEND_URL}/applied-jobs">Open your tracker</a></p>',
             )
-            print(user["email"], response.status_code)
+            print(user["email"], status)
 
     if follow_up_ids:
         await applied_jobs_collection.update_many(

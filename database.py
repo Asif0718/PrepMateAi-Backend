@@ -19,6 +19,7 @@ applied_jobs_collection = db["applied_jobs"]
 interviews_collection = db["interviews"]
 cache_collection = db["cache"]
 usage_collection = db["ai_usage"]
+job_alerts_collection = db["job_alerts"]
 
 
 async def check_mongo_connection():
@@ -38,6 +39,7 @@ async def ensure_indexes():
     await interviews_collection.create_index([("user_id", 1), ("created_at", -1)])
     await cache_collection.create_index("expires_at", expireAfterSeconds=0)
     await usage_collection.create_index("expires_at", expireAfterSeconds=0)
+    await job_alerts_collection.create_index("user_id")
 
 
 async def cache_get(key: str):

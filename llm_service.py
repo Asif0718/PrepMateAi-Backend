@@ -229,6 +229,61 @@ Return ONLY valid JSON, no markdown, in this shape:
     return await chat(prompt, max_tokens=1400, temperature=0.3, parse=_parse_tailoring)
 
 
+KIT_QUESTIONS = [
+    "Why do you want to join {company}?",
+    "Why are you a good fit for this role?",
+    "Tell us about a project you are proud of.",
+    "What are your key strengths?",
+]
+
+
+def _parse_kit(text: str) -> dict:
+    data = parse_json_object(text)
+    kit = {
+        "cover_letter": str(data.get("cover_letter", "")).strip(),
+        "recruiter_message": str(data.get("recruiter_message", "")).strip(),
+        "answers": [
+            {"question": str(a["question"]), "answer": str(a.get("answer", "")).strip()}
+            for a in data.get("answers", [])
+            if isinstance(a, dict) and a.get("question") and a.get("answer")
+        ][:6],
+    }
+    if not kit["cover_letter"] or not kit["answers"]:
+        raise ValueError("incomplete application kit")
+    return kit
+
+
+async def generate_application_kit(resume_text: str, job_description: str, title: str, company: str):
+    company = company or "the company"
+    questions = "\n".join(f"- {q.format(company=company)}" for q in KIT_QUESTIONS)
+    prompt = f"""
+Write a job application kit for this candidate, applying to "{title or 'this role'}" at {company}.
+
+Job Description:
+{job_description[:3000] or "Not provided"}
+
+Resume:
+{resume_text[:5000]}
+
+Rules:
+- Use only facts from the resume. Never invent experience, employers, numbers or skills,
+  and never state years of experience unless the resume states them.
+- Write in first person, plain and confident, no clichés like "I am writing to express my interest".
+- Cover letter: 150-220 words, 3 short paragraphs, no address block, no placeholders in brackets.
+- Recruiter message: under 80 words, suitable for LinkedIn or email, ends with a clear ask.
+- Answer each of these application questions in 60-110 words:
+{questions}
+
+Return ONLY valid JSON, no markdown:
+{{
+  "cover_letter": "...",
+  "recruiter_message": "...",
+  "answers": [{{"question": "...", "answer": "..."}}]
+}}
+"""
+    return await chat(prompt, max_tokens=1600, temperature=0.5, parse=_parse_kit)
+
+
 def _questions_parser(count: int):
     def parse(text: str) -> list[dict]:
         questions = [
