@@ -1,5 +1,7 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Header
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.concurrency import run_in_threadpool
+from contextlib import asynccontextmanager
 from datetime import datetime
 import os
 import shutil
@@ -9,7 +11,7 @@ from jobs import fetch_jobs
 
 
 from database import users_collection, resumes_collection
-from database import applied_jobs_collection
+from database import applied_jobs_collection, check_mongo_connection
 
 from models import RegisterUser, LoginUser
 from auth import hash_password, verify_password, create_token, decode_token
@@ -17,7 +19,14 @@ from auth import hash_password, verify_password, create_token, decode_token
 from pdf_reader import extract_text_from_pdf
 from llm_service import generate_preparation_guide
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    if await check_mongo_connection():
+        await users_collection.create_index("email")
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -40,6 +49,11 @@ def home():
     return {"message": "FastAPI backend running"}
 
 
+@app.get("/api/health")
+def health():
+    return {"status": "ok"}
+
+
 @app.post("/api/auth/register")
 async def register(user: RegisterUser):
     existing_user = await users_collection.find_one({"email": user.email})
@@ -50,7 +64,7 @@ async def register(user: RegisterUser):
     new_user = {
         "name": user.name,
         "email": user.email,
-        "password": hash_password(user.password),
+        "password": await run_in_threadpool(hash_password, user.password),
         "created_at": datetime.utcnow()
     }
 
@@ -74,7 +88,7 @@ async def login(user: LoginUser):
     if not db_user:
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    if not verify_password(user.password, db_user["password"]):
+    if not await run_in_threadpool(verify_password, user.password, db_user["password"]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
     token = create_token({
@@ -140,7 +154,7 @@ async def upload_resume(
     finally:
         if os.path.exists(file_path):
             os.remove(file_path)
-
+'''
 
 @app.get("/api/resume/history")
 async def get_resume_history(authorization: str = Header(None)):
@@ -170,7 +184,7 @@ async def get_resume_history(authorization: str = Header(None)):
         })
 
     return {"history": history}
-
+'''
 
 @app.delete("/api/resume/history/{history_id}")
 async def delete_resume_history(history_id: str, authorization: str = Header(None)):

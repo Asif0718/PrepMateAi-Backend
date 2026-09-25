@@ -39,8 +39,60 @@ Give output in this format:
 6. Technical Interview Questions
 7. HR Interview Questions
 8. 7-Day Preparation Plan
+9. Best Learning Resources
 
-Keep the answer clear and concise.
+For section 9, follow this EXACT format:
+
+After comparing the most recommended interview resources, provide ONE best learning resource for each day.
+
+Format:
+
+Day 1 – <Topic>
+Best Resource: <Video Title>
+Link: <Official YouTube URL>
+
+Why?
+<One or two lines>
+
+Day 2 – <Topic>
+Best Resource: <Video Title>
+Link: <Official YouTube URL>
+
+Why?
+<One or two lines>
+
+...
+
+Day 7 – <Topic>
+Best Resource: <Video Title>
+Link: <Official YouTube URL>
+
+Why?
+<One or two lines>
+
+Finally provide a section called "Bonus Resources"
+
+Include only the best official resources such as:
+- NeetCode
+- take U forward (Striver)
+- freeCodeCamp
+- Programming with Mosh
+- Bro Code
+- Codevolution
+- Web Dev Simplified
+- Linda Raynier
+- GeeksforGeeks
+- React Official Documentation
+- FastAPI Documentation
+- MongoDB Documentation
+- MDN Web Docs
+
+IMPORTANT:
+- Give only ONE best resource for each topic.
+- Prefer official YouTube links.
+- Do NOT generate fake or broken URLs.
+- Keep the answer concise and interview-focused.
+
 """
 
     response = client.chat.completions.create(
@@ -59,4 +111,10 @@ Keep the answer clear and concise.
         max_tokens=1500
     )
 
-    return response.choices[0].message.content
+    guide = response.choices[0].message.content
+
+    print("\n========== AI PREPARATION GUIDE ==========\n")
+    print(guide)
+    print("\n=========================================\n")
+
+    return guide
