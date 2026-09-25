@@ -1,7 +1,10 @@
+from io import BytesIO
+
 from pypdf import PdfReader
 
-def extract_text_from_pdf(file_path):
-    reader = PdfReader(file_path)
+
+def extract_text_from_pdf(data: bytes):
+    reader = PdfReader(BytesIO(data))
     text = ""
 
     for page in reader.pages:

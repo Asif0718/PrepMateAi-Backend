@@ -1,0 +1,22 @@
+name: Daily application reminders
+
+on:
+  schedule:
+    - cron: "30 3 * * *" # 09:00 IST
+  workflow_dispatch:
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install motor python-dotenv httpx
+      - run: python reminders.py
+        env:
+          MONGO_URL: ${{ secrets.MONGO_URL }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          BREVO_SENDER_EMAIL: ${{ secrets.BREVO_SENDER_EMAIL }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}

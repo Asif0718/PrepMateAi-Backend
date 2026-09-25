@@ -3,7 +3,8 @@ from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from fastapi import HTTPException
 
-SECRET_KEY = "mysecretkey"
+from config import SECRET_KEY
+
 ALGORITHM = "HS256"
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=10)

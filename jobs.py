@@ -1,10 +1,8 @@
-import os
-import requests
-from dotenv import load_dotenv
+import httpx
 
-load_dotenv()
+from config import RAPIDAPI_KEY
 
-RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
+_client = httpx.AsyncClient(timeout=20)
 
 
 def normalize_location(location):
@@ -20,7 +18,7 @@ def normalize_location(location):
     return corrections.get(location.lower(), location)
 
 
-def fetch_jobs(query="software developer", location="India"):
+async def fetch_jobs(query="software developer", location="India"):
     url = "https://jsearch.p.rapidapi.com/search"
 
     if not RAPIDAPI_KEY:
@@ -42,30 +40,30 @@ def fetch_jobs(query="software developer", location="India"):
         "language": "en",
     }
 
-    response = requests.get(url, headers=headers, params=params)
-
-    print("SEARCH QUERY:", params["query"])
-    print("STATUS CODE:", response.status_code)
-    print("RAW RESPONSE:", response.text)
-
-    if response.status_code != 200:
+    try:
+        response = await _client.get(url, headers=headers, params=params)
+    except httpx.HTTPError as e:
+        print("Job search request failed:", e)
         return []
 
-    data = response.json()
+    if response.status_code != 200:
+        print("Job search failed:", response.status_code, response.text[:300])
+        return []
+
     jobs = []
 
-    for job in data.get("data", []):
+    for job in response.json().get("data", []):
         apply_link = job.get("job_apply_link")
 
         if not apply_link and job.get("apply_options"):
-            apply_options = job.get("apply_options", [])
-            if len(apply_options) > 0:
-                apply_link = apply_options[0].get("apply_link")
+            apply_link = job["apply_options"][0].get("apply_link")
 
         jobs.append({
+            "id": job.get("job_id"),
             "title": job.get("job_title"),
             "company": job.get("employer_name"),
             "location": job.get("job_location"),
+            "type": job.get("job_employment_type"),
             "description": job.get("job_description"),
             "apply_link": apply_link,
             "postedAt": job.get("job_posted_at_datetime_utc"),
